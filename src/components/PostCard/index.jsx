@@ -1,4 +1,5 @@
-import "./styles.css";
+import P from 'prop-types';
+import './styles.css';
 export const PostCard = (props) => {
   const { post } = props;
 
@@ -11,4 +12,12 @@ export const PostCard = (props) => {
       </div>
     </div>
   );
+};
+
+PostCard.propTypes = {
+  title: P.string,
+  cover: P.string,
+  body: P.string,
+  id: P.number,
+  post: P.any,
 };

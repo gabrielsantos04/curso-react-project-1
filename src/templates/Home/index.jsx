@@ -1,51 +1,45 @@
-import "./styles.css";
-import { Component } from "react";
-import { PostCard } from "../../components/PostCard";
-import { Button } from "../../components/Button";
-import { InputSearch } from "../../components/InputSearch";
+import './styles.css';
+import { useState, useEffect, useCallback } from 'react';
+import { PostCard } from '../../components/PostCard';
+import { Button } from '../../components/Button';
+import { InputSearch } from '../../components/InputSearch';
 
-class Home extends Component {
-  // constructor(props) {
-  //   super(props);
+export const Home = () => {
+  const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
+  const [page, setPage] = useState(0);
+  const [postsPerPage] = useState(10);
+  const [searchValue, setSearchValue] = useState('');
 
-  //   //bound function
-  //   this.handlePClick = this.handlePClick.bind(this);
+  const filteredPosts = searchValue
+    ? posts.filter((post) => {
+        return post.title.toLowerCase().includes(searchValue.toLowerCase());
+      })
+    : posts;
 
-  //   this.state = {
-  //     name: "Gabriel Santos",
-  //     counter: 0,
-  //   };
-  // }
-
-  state = {
-    name: "Gabriel Santos",
-    counter: 0,
-    posts: [],
-    allPosts: [],
-    page: 0,
-    postsPerPage: 10,
-    searchValue: "",
+  const handleChange = (event) => {
+    const { value } = event.target;
+    //this.setState({ searchValue: value });
+    setSearchValue(value);
   };
 
-  componentDidMount() {
-    this.loadPost();
-  }
-
-  loadMorePosts = () => {
-    const { page, postsPerPage, allPosts, posts } = this.state;
+  const loadMorePosts = () => {
+    //const { page, postsPerPage, allPosts, posts } = this.state;
     const nextPage = page + postsPerPage;
     const nextPosts = allPosts.slice(nextPage, nextPage + postsPerPage);
 
     posts.push(...nextPosts);
 
-    this.setState({ posts, page: nextPage });
+    //this.setState({ posts, page: nextPage });
+    setPosts(posts);
+    setPage(nextPage);
   };
 
-  loadPost = async () => {
-    const { page, postsPerPage } = this.state;
+  const loadPost = useCallback(async (page, postsPerPage) => {
+    //const { page, postsPerPage } = this.state;
 
-    const postsResponse = fetch("https://jsonplaceholder.typicode.com/posts");
-    const photosResponse = fetch("https://jsonplaceholder.typicode.com/photos");
+    const postsResponse = fetch('https://jsonplaceholder.typicode.com/posts');
+    const photosResponse = fetch('https://jsonplaceholder.typicode.com/photos');
 
     const [posts, photos] = await Promise.all([postsResponse, photosResponse]);
 
@@ -56,65 +50,148 @@ class Home extends Component {
       return { ...post, cover: photosJson[index].url };
     });
 
-    this.setState({
-      posts: postsAndPhotos.slice(page, postsPerPage),
-      allPosts: postsAndPhotos,
-    });
-  };
+    // this.setState({
+    //   posts: postsAndPhotos.slice(page, postsPerPage),
+    //   allPosts: postsAndPhotos,
+    // });
 
-  handlePClick = () => {
-    //const { name } = this.state;
-    //console.log(`<p> clicado - ${name}`);
+    setPosts(postsAndPhotos.slice(page, postsPerPage));
+    setAllPosts(postsAndPhotos);
+  }, []);
 
-    //alterando estado
-    this.setState({ name: "Gabriel Lacerda" });
-  };
+  useEffect(() => {
+    loadPost(0, postsPerPage);
+  }, [loadPost, postsPerPage]);
 
-  //arrow function não possui this dentro dela, com isso não é necessário realizar o bind da função
-  handleAClick = (event) => {
-    event.preventDefault();
+  return (
+    <section className="container">
+      <div className="search-container">
+        {!!searchValue && <h1>Buscando por: {searchValue}</h1>}
 
-    const { counter } = this.state;
-    this.setState({ counter: counter + 1 });
-  };
+        <InputSearch searchValue={searchValue} handleChange={handleChange} />
+      </div>
+      <div className="posts">
+        {filteredPosts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
 
-  handleChange = (event) => {
-    const { value } = event.target;
-    this.setState({ searchValue: value });
-  };
+        {!searchValue && <Button onClick={loadMorePosts} text="Load more posts" />}
+      </div>
+    </section>
+  );
+};
 
-  render() {
-    const { posts, searchValue } = this.state;
+// class Home2 extends Component {
+//   // constructor(props) {
+//   //   super(props);
 
-    const filteredPosts = !!searchValue
-      ? posts.filter((post) => {
-          return post.title.toLowerCase().includes(searchValue.toLowerCase());
-        })
-      : posts;
+//   //   //bound function
+//   //   this.handlePClick = this.handlePClick.bind(this);
 
-    return (
-      <section className="container">
-        <div className="search-container">
-          {!!searchValue && <h1>Buscando por: {searchValue}</h1>}
+//   //   this.state = {
+//   //     name: "Gabriel Santos",
+//   //     counter: 0,
+//   //   };
+//   // }
 
-          <InputSearch
-            searchValue={searchValue}
-            handleChange={this.handleChange}
-          />
-        </div>
-        <div className="posts">
-          {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+//   state = {
+//     name: "Gabriel Santos",
+//     counter: 0,
+//     posts: [],
+//     allPosts: [],
+//     page: 0,
+//     postsPerPage: 10,
+//     searchValue: "",
+//   };
 
-          {!searchValue && (
-            <Button onClick={this.loadMorePosts} text="Load more posts" />
-          )}
-        </div>
-      </section>
-    );
-  }
-}
+//   componentDidMount() {
+//     this.loadPost();
+//   }
+
+//   loadMorePosts = () => {
+//     const { page, postsPerPage, allPosts, posts } = this.state;
+//     const nextPage = page + postsPerPage;
+//     const nextPosts = allPosts.slice(nextPage, nextPage + postsPerPage);
+
+//     posts.push(...nextPosts);
+
+//     this.setState({ posts, page: nextPage });
+//   };
+
+//   loadPost = async () => {
+//     const { page, postsPerPage } = this.state;
+
+//     const postsResponse = fetch("https://jsonplaceholder.typicode.com/posts");
+//     const photosResponse = fetch("https://jsonplaceholder.typicode.com/photos");
+
+//     const [posts, photos] = await Promise.all([postsResponse, photosResponse]);
+
+//     const postsJson = await posts.json();
+//     const photosJson = await photos.json();
+
+//     const postsAndPhotos = postsJson.map((post, index) => {
+//       return { ...post, cover: photosJson[index].url };
+//     });
+
+//     this.setState({
+//       posts: postsAndPhotos.slice(page, postsPerPage),
+//       allPosts: postsAndPhotos,
+//     });
+//   };
+
+//   handlePClick = () => {
+//     //const { name } = this.state;
+//     //console.log(`<p> clicado - ${name}`);
+
+//     //alterando estado
+//     this.setState({ name: "Gabriel Lacerda" });
+//   };
+
+//   //arrow function não possui this dentro dela, com isso não é necessário realizar o bind da função
+//   handleAClick = (event) => {
+//     event.preventDefault();
+
+//     const { counter } = this.state;
+//     this.setState({ counter: counter + 1 });
+//   };
+
+//   handleChange = (event) => {
+//     const { value } = event.target;
+//     this.setState({ searchValue: value });
+//   };
+
+//   render() {
+//     const { posts, searchValue } = this.state;
+
+//     const filteredPosts = !!searchValue
+//       ? posts.filter((post) => {
+//           return post.title.toLowerCase().includes(searchValue.toLowerCase());
+//         })
+//       : posts;
+
+//     return (
+//       <section className="container">
+//         <div className="search-container">
+//           {!!searchValue && <h1>Buscando por: {searchValue}</h1>}
+
+//           <InputSearch
+//             searchValue={searchValue}
+//             handleChange={this.handleChange}
+//           />
+//         </div>
+//         <div className="posts">
+//           {filteredPosts.map((post) => (
+//             <PostCard key={post.id} post={post} />
+//           ))}
+
+//           {!searchValue && (
+//             <Button onClick={this.loadMorePosts} text="Load more posts" />
+//           )}
+//         </div>
+//       </section>
+//     );
+//   }
+// }
 
 // function App() {
 //   return (
